@@ -8,14 +8,11 @@
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <meta http-equiv="Content-Type" content="text/html;charset=utf-8"/>
         <title>D3 Test</title>
-        <!-- <link rel="stylesheet" type="text/css" href="normalize.css" media="screen"> -->
-        <!-- <link href='https://fonts.googleapis.com/css?family=Open+Sans:400,700' rel='stylesheet' type='text/css'> -->
         <link rel="stylesheet" type="text/css" href="gpcr_style.css" media="screen">
         <style>
 
         .node circle {
           fill: #FFF;
-          /*fill: #00B2EE;*/
           stroke: steelblue;
           stroke-width: .5px;
         }
@@ -37,11 +34,9 @@
 
     </head>
     <body>
-        
         <div id="treeviewer"></div>
         <script>
-          // Panel for class A Gpcr tree 
-          // var diameter = 1000;
+          // Panel for class A Gpcr tree   
           var diameter = 0.8* window.innerWidth;
 
           var tree = d3.layout.tree()
@@ -53,8 +48,6 @@
               .projection(function(d) { return [d.y, d.x / 180 * Math.PI]; });
 
           var svg = d3.select(document.getElementById('treeviewer')).append("svg")
-              // .attr("width", diameter)
-              // .attr("height", diameter - 50)
               .attr("width", 0.55*window.innerWidth) // svg dimension
               .attr("height", 0.555*window.innerWidth)
             .append("g")
@@ -130,7 +123,7 @@
               $.ajax({
                   'async': false,
                   'global': false,
-                  'url': 'uniprot_to_pdbs_table.json',
+                  'url': 'uniprot_to_pdbs_and_snp_table.json',
                   'dataType': "json",
                   'success': function (data) {
                       table = data;
@@ -141,10 +134,8 @@
 
           // Panel for PV loading structure 
           var options = {
-            // width: 450,
             width: .35*window.innerWidth,
             height: 0.75*window.innerHeight,
-            // height: 900,
             antialias: true,
             quality : 'medium'
           };
@@ -179,74 +170,56 @@
             }
           }
 
-          function loadPDB(pdb) {
+          function uniprot_to_pos_snp_freq(uniprot, table) {
+            // Convert uniprot to dictionary mapping resid to snp frequency
+            pos_snp_freq = {}
+            for (var i = 0; i < table.length; i++) {
+              var obj = table[i];
+              if(obj.uniprot.includes(uniprot)) {
+                pos_snp_freq = obj.pos_snp_freq;
+              }
+            }
+            return pos_snp_freq;
+          }
+
+          function getMaxValue(obj) {
+            // Get maximum value from a java script dictionary
+            if(Object.keys(obj).length == 0){
+              return 0;
+            }
+            max_key = Object.keys(obj).reduce(function(a, b){ return obj[a] > obj[b] ? a : b });
+            return obj[max_key];
+          }
+
+          function loadPDB(pdb, pos_snp_freq) {
             // Asynchronously load the PDB file for the dengue methyl transferase
             // from the server and display it in the viewer.
             pv.io.fetchPdb("Proteins/" + pdb + ".pdb", function(structure) {
+              // Maximum number of snp over all locations of a receptor
+              max_num_snp = getMaxValue(pos_snp_freq);
 
-              var STANDARD_AA = [
-                'GLY', 'ALA', 'VAL', 'ASN', 'ASP',
-                'GLN', 'GLU', 'ARG', 'LYS', 'PRO',
-                'THR', 'TYR', 'PHE', 'SER', 'MET',
-                'HIS', 'CYS', 'TRP', 'ILE', 'LEU']
-
-              // var rb = pv.color.gradient('rainbow');
-              var AA_COLORS = {};
-              for (var i = 0; i < STANDARD_AA.length; ++i) {
-                // var color = pv.vec4.create();
-                var color = [1, 0.05*i, 0.05*i, 1];
-                // console.log(color, i/19)
-                // rb.colorAt(color, i/19);
-                AA_COLORS[STANDARD_AA[i]] = color;
-              }
-              // console.log(AA_COLORS)
-              // The function of the coloring operation gets called once for each atom. We just 
-              // lookup the color in the map defined above. In case we hit a non-standard 
-              // residue, just fall back to a gray-ish color.
+              // Color each residue of a receptor 
               var colorBySnpFreq = new pv.color.ColorOp(function(atom, out, index) {
-
-                var qname = atom.qualifiedName().split(".")
-                var resid = qname[1]
-                var atomtype = qname[2]
-                if(atomtype == "CA"){
-                  console.log(resid, atomtype)
-                  var rname = atom.residue().name();
-                  var rindex = atom.residue().index()
-                  var color = AA_COLORS[rname]; 
-
-
-                  // console.log(rname, rindex, color)
-                  if (color === undefined) {
-                    color = [0.5, 0.5, 0.5, 1.0];
+                if(max_num_snp > 0){
+                  var qname = atom.qualifiedName().split("."); // ASP131.CA
+                  var resid = qname[1].substring(3);
+                  var atomtype = qname[2];
+                  var num_snp = pos_snp_freq[resid]; // get number of snp 
+                  if(atomtype == "CA" && typeof num_snp != 'undefined'){
+                    color = [1, 1 - num_snp/max_num_snp, 1 - num_snp/max_num_snp, 1]
+                    out[index + 0] = color[0];
+                    out[index + 1] = color[1];
+                    out[index + 2] = color[2];
+                    out[index + 3] = color[3];
                   }
-                  out[index + 0] = color[0];
-                  out[index + 1] = color[1];
-                  out[index + 2] = color[2];
-                  out[index + 3] = color[3];
                 }
-               
               });
 
-              var geom = viewer.trace('structure', structure, {color: pv.color.uniform('red')});
-              // geom.colorBy(pv.color.uniform('white'))
+              // Default to white, and only color highly mutable regions
+              var geom = viewer.trace('structure', structure, {color: pv.color.uniform('white')});
               geom.colorBy(colorBySnpFreq);
-
-              // geom.colorBy(pv.color.uniform('blue'));
-              // var index = 0;
-              // structure.eachResidue(function(r) {
-              //   r.setProp('gene_variance', (index++ %10)/10);
-              // });
-
-              // viewer.cartoon('structure', structure, {
-              //   color: pv.color.byResidueProp('gene_variance')
-              // });
-
-
-              // struc = structure;
-              // viewer.trace('protein', structure, { color : color.ssSuccession() });
-              // viewer.trace('resname LEU', structure, { color: color.uniform('blue')})
-              // var ligands = structure.select({ rnames : ['YCM', '4VO', 'OLC', 'CLR', 'P04', 'P6G'] });
-              // viewer.ballsAndSticks('ligands', ligands);
+              var ligands = structure.select({ rnames : ['YCM', '4VO', 'OLC', 'CLR', 'P04', 'P6G'] });
+              viewer.ballsAndSticks('ligands', ligands);
               viewer.fitTo(structure);
               viewer.setRotation([1,0,0,0,0,1,0,-1,0]);
             });
@@ -255,11 +228,13 @@
 
           var uniprot = getQueryVariable("name");
           var pdb = uniprot_to_pdb(uniprot, table)
-          $("#description").text("Genetic Variation Viewer --- Uniprot: " + uniprot + ", PDB:" + pdb)
-          // load the methyl transferase once the DOM has finished loading. That's
-          // the earliest point the WebGL context is available.
-          document.addEventListener('DOMContentLoaded', loadPDB(pdb));
-        </script>
+          var pos_snp_freq = uniprot_to_pos_snp_freq(uniprot, table)
+          console.log(pdb, pos_snp_freq)
 
+          // Description box 
+          $("#description").text("Genetic Variation Viewer --- Uniprot: " + uniprot + ", PDB:" + pdb)
+          document.addEventListener('DOMContentLoaded', loadPDB(pdb, pos_snp_freq));
+
+        </script>
     </body>
 </html>
