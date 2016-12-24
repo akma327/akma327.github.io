@@ -1,0 +1,1 @@
+Website to display the snp variants for class A GPCRS through a pv interface.

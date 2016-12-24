@@ -1,0 +1,265 @@
+<!-- Author: Anthony Kai Kwang Ma -->
+<!-- Date: 12/22/16 -->
+
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta http-equiv="Content-Type" content="text/html;charset=utf-8"/>
+        <title>D3 Test</title>
+        <!-- <link rel="stylesheet" type="text/css" href="normalize.css" media="screen"> -->
+        <!-- <link href='https://fonts.googleapis.com/css?family=Open+Sans:400,700' rel='stylesheet' type='text/css'> -->
+        <link rel="stylesheet" type="text/css" href="gpcr_style.css" media="screen">
+        <style>
+
+        .node circle {
+          fill: #FFF;
+          /*fill: #00B2EE;*/
+          stroke: steelblue;
+          stroke-width: .5px;
+        }
+
+        .node {
+          font: 9.5px sans-serif;
+        }
+
+        .link {
+          fill: none;
+          stroke: #ccd;
+          stroke-width: 1.5px;
+        }
+        </style>
+
+        <script type="text/javascript" src="d3.v3.js"></script>        
+        <script type="text/javascript" src="pv.min.js"></script>
+        <script type="text/javascript" src="https://code.jquery.com/jquery-2.2.4.min.js"></script>
+
+    </head>
+    <body>
+        
+        <div id="treeviewer"></div>
+        <script>
+          // Panel for class A Gpcr tree 
+          // var diameter = 1000;
+          var diameter = 0.8* window.innerWidth;
+
+          var tree = d3.layout.tree()
+              .size([360, diameter / 1.5 - 380])
+              .separation(function(a, b) { return (a.parent == b.parent ? 1 : 2) / a.depth; });
+
+
+          var diagonal = d3.svg.diagonal.radial()
+              .projection(function(d) { return [d.y, d.x / 180 * Math.PI]; });
+
+          var svg = d3.select(document.getElementById('treeviewer')).append("svg")
+              // .attr("width", diameter)
+              // .attr("height", diameter - 50)
+              .attr("width", 0.55*window.innerWidth) // svg dimension
+              .attr("height", 0.555*window.innerWidth)
+            .append("g")
+              .attr("transform", "translate(" + diameter / 2.75 + "," + diameter / 2.85 + ")"); //translate 
+
+
+          d3.json("snp/flare-snp-gradient.json", function(error, root) {
+            if (error) throw error;
+
+            var nodes = tree.nodes(root),
+                links = tree.links(nodes);
+
+            var link = svg.selectAll(".link")
+                .data(links)
+              .enter().append("path")
+                .attr("class", "link")
+                .attr("d", diagonal);
+
+            var node = svg.selectAll(".node")
+                .data(nodes)
+              .enter().append("g")
+                .attr("class", "node")
+                .attr("transform", function(d) { return "rotate(" + (d.x - 90) + ")translate(" + d.y + ")"; })
+
+            node.append("circle")
+                .attr("r", 4.0).style("fill", function(d){return d.colorid});
+
+            node.append("text")
+                .attr("dy", ".31em")
+                .attr("text-anchor", function(d) { return d.x < 180 ? "start" : "end"; })
+                .attr("transform", function(d) { return d.x < 180 ? "translate(8)" : "rotate(180)translate(-8)"; })
+                .text(function(d) { return d.name; });
+
+
+            node
+              .append("a")
+              .attr("xlink:href", function(d) { return "index.html" + "?name=" + d.name;})
+              .append("rect")
+              .attr("class", "clickable")
+              .attr("y", -6)
+              .attr("x", function (d) { return d.children || d._children ? -60 : 10; })
+              .attr("width", 50) //2*4.5)
+              .attr("height", 12)
+              .style("fill", "lightsteelblue")
+              .style("fill-opacity", 0);
+
+
+            function getRandomColor() {
+              var letters = '0123456789ABCDEF';
+              var color = '#';
+              for (var i = 0; i < 6; i++ ) {
+                  color += letters[Math.floor(Math.random() * 16)];
+              }
+              return color;
+            }
+
+            function coloring(d) {
+              return getRandomColor()
+            }
+          });
+
+          d3.select(self.frameElement).style("height", diameter - 150 + "px");
+
+        </script>
+    
+        <div id="pviewer" ></div>
+        <div id="description" ></div>
+        <script>
+          // Asynchronous request to loading table.json which performs conversion
+          // between uniprot and pdb 
+          var table = (function () {
+              var table = null;
+              $.ajax({
+                  'async': false,
+                  'global': false,
+                  'url': 'uniprot_to_pdbs_table.json',
+                  'dataType': "json",
+                  'success': function (data) {
+                      table = data;
+                  }
+              });
+              return table;
+          })(); 
+
+          // Panel for PV loading structure 
+          var options = {
+            // width: 450,
+            width: .35*window.innerWidth,
+            height: 0.75*window.innerHeight,
+            // height: 900,
+            antialias: true,
+            quality : 'medium'
+          };
+          var viewer = pv.Viewer(document.getElementById('pviewer'), options);
+          var struc;
+
+          function getQueryVariable(variable) {
+            // Extract uniprot name from url 
+                 var query = window.location.search.substring(1);
+                 var vars = query.split("&");
+                 for (var i=0;i<vars.length;i++) {
+                         var pair = vars[i].split("=");
+                         if(pair[0] == variable){return pair[1];}
+                 }
+                 return(false);
+          }
+
+          function uniprot_to_pdb(uniprot, table) {
+            // Convert uniprot to pdb 
+            var pdbs = [];
+            for (var i = 0; i < table.length; i++) {
+              var obj = table[i];
+              if(obj.uniprot.includes(uniprot)) {
+                pdbs = obj.pdbs.split(",")
+              }
+            }
+            if(pdbs.length == 0){
+              return "5C1M" //default
+            }
+            else{
+              return pdbs[0]
+            }
+          }
+
+          function loadPDB(pdb) {
+            // Asynchronously load the PDB file for the dengue methyl transferase
+            // from the server and display it in the viewer.
+            pv.io.fetchPdb("Proteins/" + pdb + ".pdb", function(structure) {
+
+              var STANDARD_AA = [
+                'GLY', 'ALA', 'VAL', 'ASN', 'ASP',
+                'GLN', 'GLU', 'ARG', 'LYS', 'PRO',
+                'THR', 'TYR', 'PHE', 'SER', 'MET',
+                'HIS', 'CYS', 'TRP', 'ILE', 'LEU']
+
+              // var rb = pv.color.gradient('rainbow');
+              var AA_COLORS = {};
+              for (var i = 0; i < STANDARD_AA.length; ++i) {
+                // var color = pv.vec4.create();
+                var color = [1, 0.05*i, 0.05*i, 1];
+                // console.log(color, i/19)
+                // rb.colorAt(color, i/19);
+                AA_COLORS[STANDARD_AA[i]] = color;
+              }
+              // console.log(AA_COLORS)
+              // The function of the coloring operation gets called once for each atom. We just 
+              // lookup the color in the map defined above. In case we hit a non-standard 
+              // residue, just fall back to a gray-ish color.
+              var colorBySnpFreq = new pv.color.ColorOp(function(atom, out, index) {
+
+                var qname = atom.qualifiedName().split(".")
+                var resid = qname[1]
+                var atomtype = qname[2]
+                if(atomtype == "CA"){
+                  console.log(resid, atomtype)
+                  var rname = atom.residue().name();
+                  var rindex = atom.residue().index()
+                  var color = AA_COLORS[rname]; 
+
+
+                  // console.log(rname, rindex, color)
+                  if (color === undefined) {
+                    color = [0.5, 0.5, 0.5, 1.0];
+                  }
+                  out[index + 0] = color[0];
+                  out[index + 1] = color[1];
+                  out[index + 2] = color[2];
+                  out[index + 3] = color[3];
+                }
+               
+              });
+
+              var geom = viewer.trace('structure', structure, {color: pv.color.uniform('red')});
+              // geom.colorBy(pv.color.uniform('white'))
+              geom.colorBy(colorBySnpFreq);
+
+              // geom.colorBy(pv.color.uniform('blue'));
+              // var index = 0;
+              // structure.eachResidue(function(r) {
+              //   r.setProp('gene_variance', (index++ %10)/10);
+              // });
+
+              // viewer.cartoon('structure', structure, {
+              //   color: pv.color.byResidueProp('gene_variance')
+              // });
+
+
+              // struc = structure;
+              // viewer.trace('protein', structure, { color : color.ssSuccession() });
+              // viewer.trace('resname LEU', structure, { color: color.uniform('blue')})
+              // var ligands = structure.select({ rnames : ['YCM', '4VO', 'OLC', 'CLR', 'P04', 'P6G'] });
+              // viewer.ballsAndSticks('ligands', ligands);
+              viewer.fitTo(structure);
+              viewer.setRotation([1,0,0,0,0,1,0,-1,0]);
+            });
+          }
+
+
+          var uniprot = getQueryVariable("name");
+          var pdb = uniprot_to_pdb(uniprot, table)
+          $("#description").text("Genetic Variation Viewer --- Uniprot: " + uniprot + ", PDB:" + pdb)
+          // load the methyl transferase once the DOM has finished loading. That's
+          // the earliest point the WebGL context is available.
+          document.addEventListener('DOMContentLoaded', loadPDB(pdb));
+        </script>
+
+    </body>
+</html>

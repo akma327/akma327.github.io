@@ -1,0 +1,39 @@
+path.arc {
+    cursor: move;
+    fill: #fff;
+}
+
+.node {
+    font-size: 30px;
+    fill:#848;
+    cursor: pointer;
+}
+
+
+#treeviewer {
+    overflow: :hidden;
+    width:60%;
+    /*height:80%;*/
+    border:3px solid gray;
+    float: left;
+}
+
+#pviewer {
+    width:39%;
+    /*height:45%;*/
+    border: 3px solid gray;
+    float: right;
+}
+
+#description {
+    width:39%;
+    height: 22px;
+    border: 3px solid gray;
+    float:right;
+}
+
+
+
+body{
+    margin:0px;
+}

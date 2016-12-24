@@ -1,0 +1,31 @@
+# Notepad
+
+0) See if I can assign a random shade of red to all amino acids. 
+	- Seems like I can map a particular amino acid to particular shade of red
+	- Figure out how to do actual shade of red through converting hex to decimal 
+	- Figure out how to get the index mapping to color rather than amino acid to color
+
+1) Got to figure out how to get proper residue indexes from amino acid in pdb 
+to that used internally by pv
+
+2) I will have data for each uniprot pdb, with indices mapped to some floating 
+point representing the frequency of snp variation 
+(ie 120 = 0.33, 121 = 0.1, 124 = 0.4, ... resid = freq)
+Goal is to assign color as [freq, 0, 0] cvec representation of color. Effectively
+I will just be assigning the red channel as the frequency value. 
+
+
+12/23/16
+
+- Figured out how to create white to red gradient in the 4 number notation
+	- 1,1,1,1 is white, 1, 0,0,1 is red. 1, 0.05*i, 0.05*i, 1 is the gradient
+
+- Need to figure out how to accurately get the residue indexing working. Once that is
+good then everything should work. Read in a json dictionary mapping residue position
+to snp variation freq. This frequency will be binned to the 20 categories of "redness"
+to get the actual color encoding. 
+
+TODO:
+- Figure out how to get the indexing for pdb input working properly. Maybe explore selection?
+
+- The residue indices match, now get the data for snp frequencies. 
