@@ -159,7 +159,7 @@
             var pdbs = [];
             for (var i = 0; i < table.length; i++) {
               var obj = table[i];
-              if(obj.uniprot.includes(uniprot)) {
+              if(obj.uniprot.includes(uniprot) && obj.uniprot.includes("human")) {
                 pdbs = obj.pdbs.split(",")
               }
             }
@@ -179,7 +179,7 @@
             pos_snp_freq = {}
             for (var i = 0; i < table.length; i++) {
               var obj = table[i];
-              if(obj.uniprot.includes(uniprot)) {
+              if(obj.uniprot.includes(uniprot) && obj.uniprot.includes("human")) {
                 pos_snp_freq = obj.pos_snp_freq;
               }
             }
