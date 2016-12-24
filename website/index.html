@@ -154,7 +154,8 @@
           }
 
           function uniprot_to_pdb(uniprot, table) {
-            // Convert uniprot to pdb 
+            // Convert uniprot to pdb if the crystal structure has
+            // been solved. If not then just return 5C1M or an I-Tasser Model
             var pdbs = [];
             for (var i = 0; i < table.length; i++) {
               var obj = table[i];
@@ -163,7 +164,7 @@
               }
             }
             if(pdbs.length == 0){
-              return "5C1M" //default
+              return "5C1M"
             }
             else{
               return pdbs[0]
@@ -172,6 +173,9 @@
 
           function uniprot_to_pos_snp_freq(uniprot, table) {
             // Convert uniprot to dictionary mapping resid to snp frequency
+            // if there exists snp data for that particular uniprot. If not
+            // then will return an empty dictionary {}. The display will
+            // be some default 5C1M pdb or I-tasser model with no coloring. 
             pos_snp_freq = {}
             for (var i = 0; i < table.length; i++) {
               var obj = table[i];
