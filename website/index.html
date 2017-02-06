@@ -233,7 +233,7 @@
           var uniprot = getQueryVariable("name");
           var pdb = uniprot_to_pdb(uniprot, table)
           var pos_snp_freq = uniprot_to_pos_snp_freq(uniprot, table)
-          console.log(pdb, pos_snp_freq)
+          console.log(uniprot, pdb, pos_snp_freq)
 
           // Description box 
           $("#description").text("Genetic Variation Viewer --- Uniprot: " + uniprot + ", PDB:" + pdb)
