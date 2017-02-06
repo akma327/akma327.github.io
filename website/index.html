@@ -155,7 +155,7 @@
 
           function uniprot_to_pdb(uniprot, table) {
             // Convert uniprot to pdb if the crystal structure has
-            // been solved. If not then just return 5C1M or an I-Tasser Model
+            // been solved. If not then just return 5C1M or an GPCRDB Model
             var pdbs = [];
             for (var i = 0; i < table.length; i++) {
               var obj = table[i];

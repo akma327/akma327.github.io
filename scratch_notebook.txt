@@ -1,0 +1,9 @@
+# scratch_notebook.py
+
+# 02/06/17
+
+- Need to generate a dictionary table mapping uniprot to the snp information for all class A 
+gpcr uniprots. 
+- Might revamp another table to channel uniprot to pdb to use (for ones with crystal structure
+use the original from PDB, otherwise use GPCRDB models)
+
