@@ -7,3 +7,15 @@ gpcr uniprots.
 - Might revamp another table to channel uniprot to pdb to use (for ones with crystal structure
 use the original from PDB, otherwise use GPCRDB models)
 
+- Have one dictionary mapping from uniprot --> snps (this basically just involves processing the 
+file AJ gave me)
+- Have second dictionary mapping from uniprot to pdb
+- Have third dictionary mapping from uniprot to gpcrdb models (only for ones that don't have real PDB)
+
+Query Processing:
+- User clicks one of the page
+- uniprot retrieved
+- If in pdb dict then get pdb, also get snps
+- If not in pdb dict then get modeled pdb, also get snps 
+
+
