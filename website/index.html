@@ -116,21 +116,37 @@
         <div id="pviewer" ></div>
         <div id="description" ></div>
         <script>
-          // Asynchronous request to loading table.json which performs conversion
+          // Asynchronous request to loading uniprot_to_crystal_pdb.json which performs conversion
           // between uniprot and pdb 
-          var table = (function () {
-              var table = null;
+          var uniprot_to_pdb_table = (function () {
+              var uniprot_to_pdb_table = null;
               $.ajax({
                   'async': false,
                   'global': false,
-                  'url': 'uniprot_to_pdbs_and_snp_table.json',
+                  'url': 'uniprot_to_crystal_pdb.json',
                   'dataType': "json",
                   'success': function (data) {
-                      table = data;
+                      uniprot_to_pdb_table = data;
                   }
               });
-              return table;
+              return uniprot_to_pdb_table;
           })(); 
+
+          // Load table mapping uniprot to snp data 
+          var uniprot_to_snp_table = (function () {
+              var uniprot_to_snp_table = null;
+              $.ajax({
+                  'async': false,
+                  'global': false,
+                  'url': 'uniprot_to_snp.json',
+                  'dataType': "json",
+                  'success': function (data) {
+                      uniprot_to_snp_table = data;
+                  }
+              });
+              return uniprot_to_snp_table;
+          })(); 
+
 
           // Panel for PV loading structure 
           var options = {
@@ -153,32 +169,32 @@
                  return(false);
           }
 
-          function uniprot_to_pdb(uniprot, table) {
+          function uniprot_to_pdb(uniprot, uniprot_to_pdb_table) {
             // Convert uniprot to pdb if the crystal structure has
             // been solved. If not then just return 5C1M or an GPCRDB Model
             var pdbs = [];
-            for (var i = 0; i < table.length; i++) {
-              var obj = table[i];
+            for (var i = 0; i < uniprot_to_pdb_table.length; i++) {
+              var obj = uniprot_to_pdb_table[i];
               if(obj.uniprot.includes(uniprot) && obj.uniprot.includes("human")) {
                 pdbs = obj.pdbs.split(",")
               }
             }
             if(pdbs.length == 0){
-              return "5C1M"
+              return "None"
             }
             else{
               return pdbs[0]
             }
           }
 
-          function uniprot_to_pos_snp_freq(uniprot, table) {
+          function uniprot_to_pos_snp_freq(uniprot, uniprot_to_snp_table) {
             // Convert uniprot to dictionary mapping resid to snp frequency
             // if there exists snp data for that particular uniprot. If not
             // then will return an empty dictionary {}. The display will
             // be some default 5C1M pdb or I-tasser model with no coloring. 
             pos_snp_freq = {}
-            for (var i = 0; i < table.length; i++) {
-              var obj = table[i];
+            for (var i = 0; i < uniprot_to_snp_table.length; i++) {
+              var obj = uniprot_to_snp_table[i];
               if(obj.uniprot.includes(uniprot) && obj.uniprot.includes("human")) {
                 pos_snp_freq = obj.pos_snp_freq;
               }
@@ -195,10 +211,19 @@
             return obj[max_key];
           }
 
-          function loadPDB(pdb, pos_snp_freq) {
+          function loadPDB(pdb, uniprot, pos_snp_freq) {
             // Asynchronously load the PDB file for the dengue methyl transferase
             // from the server and display it in the viewer.
-            pv.io.fetchPdb("Proteins/" + pdb + ".pdb", function(structure) {
+
+            var pdb_path;
+            if(pdb != "None"){
+              pdb_path = "Proteins/" + pdb + ".pdb"
+            }
+            else{
+              pdb_path = "homology_models/" + uniprot + "_human_Inactive/" + uniprot + "_human_Inactive_model.pdb"
+            }
+
+            pv.io.fetchPdb(pdb_path, function(structure) {
               // Maximum number of snp over all locations of a receptor
               max_num_snp = getMaxValue(pos_snp_freq);
 
@@ -231,13 +256,13 @@
 
 
           var uniprot = getQueryVariable("name");
-          var pdb = uniprot_to_pdb(uniprot, table)
-          var pos_snp_freq = uniprot_to_pos_snp_freq(uniprot, table)
+          var pdb = uniprot_to_pdb(uniprot, uniprot_to_pdb_table) // PDB or None if not solved structure
+          var pos_snp_freq = uniprot_to_pos_snp_freq(uniprot, uniprot_to_snp_table)
           console.log(uniprot, pdb, pos_snp_freq)
 
           // Description box 
-          $("#description").text("Genetics Variation Viewer --- Uniprot: " + uniprot + ", PDB:" + pdb)
-          document.addEventListener('DOMContentLoaded', loadPDB(pdb, pos_snp_freq));
+          $("#description").text("Genetic Variation Viewer --- Uniprot: " + uniprot + ", PDB:" + pdb)
+          document.addEventListener('DOMContentLoaded', loadPDB(pdb, uniprot, pos_snp_freq));
 
         </script>
     </body>

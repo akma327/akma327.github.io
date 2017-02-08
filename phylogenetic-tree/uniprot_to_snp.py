@@ -53,9 +53,16 @@ def calc_uniprot_to_snp():
 
 	return uniprot_to_snp
 
+def format_data(uniprot_to_snp):
+	snp_data = []
+	for uniprot in uniprot_to_snp:
+		snp = uniprot_to_snp[uniprot]
+		snp_data.append({"uniprot": uniprot, "pos_snp_freq":snp})
+	return snp_data
 
 def driver(OUTPUT_FILE):
 	uniprot_to_snp = calc_uniprot_to_snp()
+	uniprot_to_snp = format_data(uniprot_to_snp)
 	with open(OUTPUT_FILE, 'w') as f:
 		json.dump(uniprot_to_snp, f)
 
