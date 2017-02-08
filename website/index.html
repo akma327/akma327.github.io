@@ -54,7 +54,7 @@
               .attr("transform", "translate(" + diameter / 2.75 + "," + diameter / 2.85 + ")"); //translate 
 
 
-          d3.json("snp/flare-snp-gradient.json", function(error, root) {
+          d3.json("snp/flare-snp-gradient-nocolor.json", function(error, root) {
             if (error) throw error;
 
             var nodes = tree.nodes(root),

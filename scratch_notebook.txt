@@ -19,3 +19,10 @@ Query Processing:
 - If not in pdb dict then get modeled pdb, also get snps 
 
 
+
+02/07/17
+
+DATA="/scratch/PI/rondror/akma327/GeneticVariations/data/phylogenetic-tree/phylo_data.txt"
+OUT="/scratch/PI/rondror/akma327/GeneticVariations/src/website/snp/no_color.json"
+cd /scratch/PI/rondror/akma327/GeneticVariations/src/phylogenetic-tree
+python phylo_tree_gen.py $DATA $OUT
