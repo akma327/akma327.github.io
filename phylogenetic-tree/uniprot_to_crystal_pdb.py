@@ -1,5 +1,5 @@
 # Author: Anthony Kai Kwang Ma
-# Email: akma327@stanford.edu
+# Email: anthonyma27@gmail.com, akma327@stanford.edu
 # uniprot_to_crystal_pdb.py
 
 import json 

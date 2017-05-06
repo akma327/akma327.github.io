@@ -1,5 +1,5 @@
 # Author: Anthony Kai Kwang Ma
-# Email: akma327@stanford.edu
+# Email: anthonyma27@gmail.com, akma327@stanford.edu
 # phylo_tree_prep.py
 
 #!/share/PI/rondror/software/miniconda/bin/python
